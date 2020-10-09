@@ -13,6 +13,9 @@ using Microsoft.Extensions.Hosting;
 using System.Linq;
 using BlazorSecureWasm.Server.Data;
 using BlazorSecureWasm.Server.Models;
+using Microsoft.AspNetCore.Authentication.Twitter;
+using System.Security.Policy;
+using Microsoft.AspNetCore.Http;
 
 namespace BlazorSecureWasm.Server
 {
@@ -38,8 +41,6 @@ namespace BlazorSecureWasm.Server
                 .AddDefaultUI()
                 .AddDefaultTokenProviders();
 
-            
-
             //services.AddAuthentication()
             //    .AddGoogle(options =>
             //    {
@@ -53,14 +54,15 @@ namespace BlazorSecureWasm.Server
             services.AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
 
-            services.AddAuthentication()
-                .AddIdentityServerJwt()
+            services.AddAuthentication(o => o.DefaultChallengeScheme = TwitterDefaults.AuthenticationScheme)
                 .AddTwitter(twitterOptions =>
-            {
-                twitterOptions.ConsumerKey = Configuration["Authentication:Twitter:ConsumerAPIKey"];
-                twitterOptions.ConsumerSecret = Configuration["Authentication:Twitter:ConsumerSecret"];
-                twitterOptions.RetrieveUserDetails = true;
-            });
+                {
+                    twitterOptions.ConsumerKey = Configuration["Authentication:Twitter:ConsumerAPIKey"];
+                    twitterOptions.ConsumerSecret = Configuration["Authentication:Twitter:ConsumerSecret"];
+                    twitterOptions.RetrieveUserDetails = true;
+                    twitterOptions.CallbackPath = new PathString("/signin-twitter");
+                })
+                .AddIdentityServerJwt();
 
             services.AddControllersWithViews();
             services.AddRazorPages();
